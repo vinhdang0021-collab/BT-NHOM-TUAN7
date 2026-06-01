@@ -1,0 +1,36 @@
+from tensorflow.keras.models import load_model
+
+my_model = load_model('/content/mo_hinh_mon_an.h5')
+___________________________________________________________________
+from keras.utils import load_img
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import numpy as np
+import matplotlib.pyplot as plt
+
+thu_muc_train = '/content/drive/MyDrive/ảnh /DATA-MÓN ĂN VIỆT NAM'
+
+train_datagen = ImageDataGenerator(rescale=1./255)
+train_generator = train_datagen.flow_from_directory(
+    thu_muc_train,
+    target_size=(200, 200),
+    batch_size=32,
+    class_mode='categorical'
+)
+
+path = "/content/vd6.jpg"
+img = load_img(path, target_size=(250, 200))
+plt.imshow(img)
+plt.show()
+
+img = np.array(img)
+img = img / 255
+img = img.reshape(1, 250, 200, 3)
+
+preds = my_model.predict(img)
+prediction = np.argmax(preds)
+confidence = preds[0][prediction] * 100
+
+class_labels = {v: k for k, v in train_generator.class_indices.items()}
+person_name = class_labels[prediction]
+
+print(f"Món ăn tiên đoán: {person_name} / Độ tự tin: {confidence:.2f}%")
