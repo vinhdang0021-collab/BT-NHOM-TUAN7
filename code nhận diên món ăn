@@ -1,0 +1,71 @@
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import matplotlib.pyplot as plt
+
+train_dir = "/content/drive/MyDrive/ảnh /DATA-MÓN ĂN VIỆT NAM"
+
+img_width, img_height = 250, 200
+batch_size = 32
+
+train_datagen = ImageDataGenerator(
+    rescale=1.0/255,
+    rotation_range=30,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    fill_mode="nearest"
+)
+train_generator = train_datagen.flow_from_directory(
+        train_dir,
+        target_size=(img_width, img_height),
+        batch_size=batch_size,
+        class_mode='categorical')
+  _______________________________________________________________________
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(img_width, img_height, 3)),
+    MaxPooling2D((2, 2)),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Conv2D(128, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Conv2D(256, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Conv2D(512, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Conv2D(1024, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Flatten(),
+    Dense(1024, activation='relu'),
+    Dropout(0.5),
+    Dense(train_generator.num_classes, activation='softmax')
+])
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.summary()
+epochs = 1000
+history = model.fit(train_generator, epochs=epochs)
+plt.plot(history.history['accuracy'])
+plt.title('Model accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend()
+plt.show()
+___________________________________________________________________________________
+from keras.utils import load_img
+import numpy as np
+import matplotlib.pyplot as plt
+path = "/content/vd6.jpg"
+img = load_img(path, target_size=(img_width, img_height))
+plt.imshow(img)
+plt.show()
+img=np.array(img)
+img=img/255
+img=img.reshape(1,img_width,img_height,3)
+preds = model.predict(img)
+prediction = np.argmax(preds)
+confidence = preds[0][prediction] * 100
+class_labels = {v: k for k, v in train_generator.class_indices.items()}
+person_name = class_labels[prediction]
+print(f"Món ăn tiên đoán: {person_name} / Độ tự tin: {confidence:.2f}%")
